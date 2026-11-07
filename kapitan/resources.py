@@ -387,6 +387,7 @@ def generate_inventory(args):
 def get_inventory(
     inventory_path,
     ignore_class_not_found: bool = False,
+    partial: bool = False,
     *,
     backend_id=None,
     compose_target_name=None,
@@ -396,6 +397,7 @@ def get_inventory(
     """
     generic inventory function that makes inventory backend pluggable
     default backend is reclass
+    partial renders only dependencies and labels, see Inventory.partial
 
     Backend selection and rendering flags may be passed explicitly. When left
     as None they fall back to the parsed CLI args in ``kapitan.cached.args`` so
@@ -439,6 +441,7 @@ def get_inventory(
             compose_target_name=compose_target_name,
             ignore_class_not_found=ignore_class_not_found,
             enable_class_wildcards=enable_class_wildcards,
+            partial=partial,
         )
     except InventoryError:
         sys.exit(1)

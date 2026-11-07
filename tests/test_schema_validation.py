@@ -14,6 +14,7 @@ import shutil
 import tempfile
 import unittest
 from pathlib import Path
+from unittest import mock
 
 import pytest
 import yaml
@@ -468,3 +469,29 @@ class TestGeneratorSchemaValidationCompile:
             )
         assert exc_info.value.code == 1
         reset_cache()
+
+    @pytest.mark.parametrize("backend", INVENTORY_BACKENDS)
+    def test_compile_fetch_validates_under_custom_output_path(
+        self, schema_validation_inventory, monkeypatch, capfd, backend
+    ):
+        """With --fetch, the schema is looked up under --output-path as well."""
+        _skip_if_backend_unavailable(backend)
+        base = Path(schema_validation_inventory)
+        (base / "out").mkdir()
+        shutil.move(base / "lib", base / "out" / "lib")
+        self._write_target(schema_validation_inventory, "warn")
+        monkeypatch.chdir(schema_validation_inventory)
+        reset_cache()
+        with mock.patch("kapitan.targets.fetch_dependencies"):
+            kapitan(
+                "compile",
+                "-t",
+                "test",
+                "--inventory-backend",
+                backend,
+                "--output-path",
+                "out",
+                "--fetch",
+            )
+        reset_cache()
+        assert "Schema: out/lib/testgen/schema.json" in capfd.readouterr().err
