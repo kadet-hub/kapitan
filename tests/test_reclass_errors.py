@@ -202,9 +202,15 @@ class CompileErrorLoggingTest(unittest.TestCase):
 
     def test_reclass_not_found_during_compile_keeps_reclass_message(self):
         compile_entry = {"output_path": ".", "input_type": "copy", "input_paths": []}
+        # --fetch only calls fetch_dependencies for targets that declare one
+        dependency = {
+            "type": "git",
+            "source": "https://example.com/repo.git",
+            "output_path": "some/dependency",
+        }
+        kapitan_params = {"compile": [compile_entry], "dependencies": [dependency]}
         create_test_inventory(
-            os.getcwd(),
-            {"real": {"parameters": {"kapitan": {"compile": [compile_entry]}}}},
+            os.getcwd(), {"real": {"parameters": {"kapitan": kapitan_params}}}
         )
         error = NotFoundError("No such directory: some/dependency")
         with mock.patch("kapitan.targets.fetch_dependencies", side_effect=error):
